@@ -22,7 +22,7 @@ private:
 
     std::string form_address_line();
 
-    void calculate_data_write_positions();
+    std::vector<std::pair<std::size_t, std::size_t>> calculate_data_write_positions(const std::string& address_line);
 
     static void statusThread(Monitor& monitor, std::size_t address_index, long& status, long& duration) {
         auto start = std::chrono::high_resolution_clock::now();
