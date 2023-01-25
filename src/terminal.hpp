@@ -5,6 +5,8 @@
 #include <cpp-terminal/base.hpp>
 #include "monitor.hpp"
 
+typedef std::vector<std::pair<std::size_t, std::size_t>> pair_vector;
+
 class Terminal {
 public:
 
@@ -16,13 +18,16 @@ public:
 
 private:
     Monitor* monitor;
-    std::vector<std::pair<std::size_t, std::size_t>> dataWritePositions;
+    std::vector<std::pair<std::size_t, std::size_t>> data_write_positions;
+
+    const std::size_t DATA_ROW_INDEX = 3;
+    const std::size_t DATA_MAX_LENGTH = 17;
 
     void update_terminal(long* statuses, long* pings, std::size_t num_threads);
 
     std::string form_address_line();
 
-    std::vector<std::pair<std::size_t, std::size_t>> calculate_data_write_positions(const std::string& address_line);
+    std::vector<std::pair<std::size_t, std::size_t>> calculate_data_write_positions(std::string_view address_line);
 
     static void statusThread(Monitor& monitor, std::size_t address_index, long& status, long& duration) {
         auto start = std::chrono::high_resolution_clock::now();

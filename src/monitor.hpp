@@ -1,7 +1,3 @@
-// monitor.hpp - Declares methods used to get the HTTP status and ping of websites
-// Author: Dylan Green
-// Version: 2022.12.15
-
 #ifndef PINGMONITOR_MONITOR_HPP
 #define PINGMONITOR_MONITOR_HPP
 

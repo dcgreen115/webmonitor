@@ -40,7 +40,7 @@ void parse_args(Monitor& monitor, int argc, char* argv[]) {
                 break;
             case 'i': // Interval
             {
-                std::stringstream ss(optarg);
+                std::stringstream ss(optarg); // Create a stringstream to extract the number passed in
                 int i;
                 ss >> i;
                 monitor.setInterval(i);
@@ -67,12 +67,11 @@ int main(int argc, char* argv[]) {
     try {
         parse_args(monitor, argc, argv);
     } catch (std::invalid_argument&) {
+        // getopt will automatically generate an error message, so just return
         return 1;
     }
 
-    // Take control of the terminal this program is run in and start displaying
-    // data from the monitor
+    // Take control of the terminal this program is run in and start displaying data from the monitor
     Terminal terminal(monitor);
-    terminal.init();
     terminal.run();
 }

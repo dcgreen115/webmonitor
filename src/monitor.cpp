@@ -1,7 +1,3 @@
-// monitor.cpp - Defines methods used to get the HTTP status and ping of websites
-//
-//
-
 #include <iostream>
 #include "monitor.hpp"
 
