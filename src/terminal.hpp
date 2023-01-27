@@ -5,30 +5,43 @@
 #include <cpp-terminal/base.hpp>
 #include "monitor.hpp"
 
-typedef std::vector<std::pair<std::size_t, std::size_t>> pair_vector;
-
 class Terminal {
 public:
+    // A constructor that uses a monitor to take data from
+    explicit Terminal(Monitor monitor);
 
-    explicit Terminal(Monitor& monitor);
-
-    void init();
-
+    // Continuously gets new data from the monitor and updates data
+    // in the terminal window
     [[noreturn]] void run();
 
 private:
-    Monitor* monitor;
+    // The row that data will be printed on within the terminal
+    static constexpr std::size_t DATA_ROW_INDEX = 3;
+    // The maximum length that data can have - "HTTP 200 | 1000ms"
+    static constexpr std::size_t DATA_MAX_LENGTH = 17;
+
+    // The monitor from which HTTP status and time-to-last-byte data is
+    // obtained from
+    Monitor monitor;
+
+    // A list holding the indices that data will be written to on the terminal
     std::vector<std::pair<std::size_t, std::size_t>> data_write_positions;
 
-    const std::size_t DATA_ROW_INDEX = 3;
-    const std::size_t DATA_MAX_LENGTH = 17;
+    // Sets up the terminal view-box
+    void init();
 
-    void update_terminal(long* statuses, long* pings, std::size_t num_threads);
+    // Gets new data from the monitor and updates the terminal
+    void update_terminal(const long* statuses, const long* times) const;
 
+    // Creates the address line that will be printed on the terminal,
+    // with centered text
     std::string form_address_line();
 
-    std::vector<std::pair<std::size_t, std::size_t>> calculate_data_write_positions(std::string_view address_line);
+    // Finds the positions in the terminal that data should be written at
+    [[nodiscard]] std::vector<std::pair<std::size_t, std::size_t>> calculate_data_positions(std::string_view address_line);
 
+    // A thread that will get the current HTTP status and time-to-last-byte of
+    // a website contained in the monitor
     static void statusThread(Monitor& monitor, std::size_t address_index, long& status, long& duration) {
         auto start = std::chrono::high_resolution_clock::now();
         status = monitor.get_http_status(address_index);

@@ -1,7 +1,12 @@
 #include <iostream>
 #include "monitor.hpp"
 
-long Monitor::get_http_status(std::size_t addressIndex) {
+/**
+ * Gets the current HTTP status of the CURL handle at the specified index
+ * @param addressIndex The index of the CURL handle to use
+ * @return The current HTTP code of the specified CURL handle
+ */
+int32_t Monitor::get_http_status(std::size_t addressIndex) const {
     CURLcode code = curl_easy_perform(handles.at(addressIndex));
 
     // If the connection failed, immediately return
@@ -10,7 +15,7 @@ long Monitor::get_http_status(std::size_t addressIndex) {
     }
 
     // Otherwise, return the HTTP response code
-    long http_code = 0;
+    int32_t http_code = 0;
     curl_easy_getinfo(handles.at(addressIndex), CURLINFO_RESPONSE_CODE, &http_code);
     return http_code;
 }
@@ -25,11 +30,13 @@ std::vector<CURL*>* Monitor::getHandles() {
     return &handles;
 }
 
+// Returns this monitor's refresh interval
 uint32_t Monitor::getInterval() const {
     return interval;
 }
 
-void Monitor::setInterval(uint32_t newInterval) {
+// Sets this monitor's refresh interval
+void Monitor::setInterval(const uint32_t newInterval) {
     interval = newInterval;
 }
 

@@ -6,12 +6,21 @@
 #include "monitor.hpp"
 #include "terminal.hpp"
 
-// This function is used as a callback for libcurl so that it doesn't print HTTP responses to stdout
-std::size_t write_data([[maybe_unused]] void* buffer, std::size_t size, std::size_t nmemb, [[maybe_unused]] void* userp) {
+// This function is used as a callback for libcurl so that it doesn't print
+// HTTP responses to stdout
+std::size_t write_data([[maybe_unused]] void* buffer, std::size_t size,
+                       std::size_t nmemb, [[maybe_unused]] void* userp) {
     return size * nmemb;
 }
 
-void parse_args(Monitor& monitor, int argc, char* argv[]) {
+/**
+ * Uses getopt to parse program arguments
+ * @param monitor The Monitor object that will hold the data parsed from
+ * the program arguments
+ * @param argc The argc passed in to the main function
+ * @param argv The argv passed in to the main function
+ */
+void parse_args(Monitor& monitor, const int argc, char* const argv[]) {
     struct option long_options[] = {
             {"help", no_argument, nullptr, 'h'},
             {"address", required_argument, nullptr, 'a'},
