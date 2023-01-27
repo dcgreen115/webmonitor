@@ -9,6 +9,7 @@
 class Monitor {
 public:
     Monitor() = default;
+    ~Monitor();
 
     // Returns the current HTTP status of the CURL handle at addressIndex
     [[nodiscard]] int32_t get_http_status(std::size_t addressIndex) const;

@@ -3,8 +3,15 @@
 #include <cstring>
 #include <getopt.h>
 #include <sstream>
+#include <csignal>
 #include "monitor.hpp"
 #include "terminal.hpp"
+
+sig_atomic_t volatile running = true;
+
+void sig_handler(int signum) {
+    running = false;
+}
 
 // This function is used as a callback for libcurl so that it doesn't print
 // HTTP responses to stdout
@@ -80,7 +87,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    // Register a signal handler so that the program exits cleanly on Ctrl+C
+    signal(SIGINT, &sig_handler);
+    signal(SIGTERM, &sig_handler);
+
     // Take control of the terminal this program is run in and start displaying data from the monitor
-    Terminal terminal(monitor);
+    Terminal terminal(&monitor);
     terminal.run();
 }

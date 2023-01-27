@@ -1,6 +1,12 @@
 #include <iostream>
 #include "monitor.hpp"
 
+Monitor::~Monitor() {
+    for (auto handle : handles) {
+        curl_easy_cleanup(handle);
+    }
+}
+
 /**
  * Gets the current HTTP status of the CURL handle at the specified index
  * @param addressIndex The index of the CURL handle to use
@@ -39,6 +45,3 @@ uint32_t Monitor::getInterval() const {
 void Monitor::setInterval(const uint32_t newInterval) {
     interval = newInterval;
 }
-
-
-

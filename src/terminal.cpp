@@ -10,16 +10,19 @@
 #include "monitor.hpp"
 #include <cpp-terminal/base.hpp>
 #include <utility>
+#include <csignal>
 
 using namespace std;
+
+extern sig_atomic_t running;
 
 /**
  * Creates a new terminal controller, using the specified monitor to obtain
  * new data
  * @param new_monitor The monitor to take data from
  */
-Terminal::Terminal(Monitor new_monitor) {
-    monitor = std::move(new_monitor);
+Terminal::Terminal(Monitor* new_monitor) {
+    monitor = new_monitor;
     init();
 }
 
@@ -41,7 +44,7 @@ void Terminal::init() {
     cout << address_line << '\n';
 
     cout << '#';
-    for (string_view address : *monitor.getAddresses()) {
+    for (string_view address : *monitor->getAddresses()) {
         if (address.length() < DATA_MAX_LENGTH) {
             cout << std::string(25, ' ') << '#';
         } else {
@@ -59,11 +62,11 @@ void Terminal::init() {
  * Continuously updates the HTTP status and time-to-last-byte for each address
  * held by the monitor and prints new data to the terminal.
  */
-[[noreturn]] void Terminal::run() {
+void Terminal::run() {
 
-    while (true) {
+    while (running) {
         // Set up arrays to hold threads and their return values
-        size_t numThreads = monitor.getAddresses()->size();
+        size_t numThreads = monitor->getAddresses()->size();
         thread statusThreads[numThreads];
         long statuses[numThreads];
         long pings[numThreads];
@@ -76,7 +79,7 @@ void Terminal::init() {
             pings[i] = -1;
 
             // Start the threads
-            statusThreads[i] = thread(&Terminal::statusThread, ref(monitor), i, ref(statuses[i]), ref(pings[i]));
+            statusThreads[i] = thread(&Terminal::statusThread, ref(*monitor), i, ref(statuses[i]), ref(pings[i]));
         }
 
         for (size_t i = 0; i < numThreads; i++) {
@@ -86,7 +89,7 @@ void Terminal::init() {
         update_terminal(statuses, pings);
 
         // Sleep for the specified interval
-        sleep(monitor.getInterval());
+        sleep(monitor->getInterval());
     }
 }
 
@@ -120,7 +123,7 @@ string Terminal::form_address_line() {
     string address_line;
     address_line.append("#"); // The left edge of the view-box
 
-    for (const string_view address : *monitor.getAddresses()) {
+    for (const string_view address : *monitor->getAddresses()) {
 
         // All addresses will have at least 4 leading spaces
         address_line.append("    ");
@@ -174,7 +177,7 @@ vector<pair<size_t, size_t>> Terminal::calculate_data_positions(const string_vie
     vector<pair<size_t, size_t>> returnVector;
 
     // The list of addresses being used by the monitor and its size
-    auto addresses = monitor.getAddresses();
+    auto addresses = monitor->getAddresses();
     auto numAddresses = addresses->size();
 
     // To help string::find() run properly with multiple addresses
