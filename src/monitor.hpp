@@ -15,8 +15,8 @@ public:
     [[nodiscard]] int32_t get_http_status(std::size_t addressIndex) const;
 
     // Getters and setters
-    std::vector<std::string>* getAddresses();
-    std::vector<CURL*>* getHandles();
+    [[nodiscard]] std::vector<std::string>* getAddresses();
+    [[nodiscard]] std::vector<CURL*>* getHandles();
     [[nodiscard]] uint32_t getInterval() const;
     void setInterval(uint32_t newInterval);
 private:

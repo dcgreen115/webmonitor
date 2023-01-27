@@ -31,7 +31,7 @@ private:
     void init();
 
     // Gets new data from the monitor and updates the terminal
-    void update_terminal(const long* statuses, const long* times) const;
+    void update_terminal(std::vector<long>& statuses, std::vector<long>& times) const;
 
     // Creates the address line that will be printed on the terminal,
     // with centered text

@@ -9,7 +9,7 @@
 
 sig_atomic_t volatile running = true;
 
-void sig_handler(int signum) {
+void sig_handler([[maybe_unused]] int signum) {
     running = false;
 }
 
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Register a signal handler so that the program exits cleanly on Ctrl+C
+    // Register signal handlers so that the program exits cleanly
     signal(SIGINT, &sig_handler);
     signal(SIGTERM, &sig_handler);
 

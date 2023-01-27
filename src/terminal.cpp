@@ -64,27 +64,23 @@ void Terminal::init() {
  */
 void Terminal::run() {
 
+    const size_t numThreads = monitor->getAddresses()->size();
+    vector<thread> statusThreads;
+    vector<long> statuses(numThreads);
+    vector<long> pings(numThreads);
+
     while (running) {
-        // Set up arrays to hold threads and their return values
-        size_t numThreads = monitor->getAddresses()->size();
-        thread statusThreads[numThreads];
-        long statuses[numThreads];
-        long pings[numThreads];
+        // Fill the status and TTLB vectors with default values
+        // These will be updated inside the status threads
+        fill_n(statuses.begin(), numThreads, -1);
+        fill_n(pings.begin(), numThreads, -1);
 
-        // Spawn an HTTP status and ping thread for each address
+        // Spawn an HTTP status thread for each address, then join them all
         for (size_t i = 0; i < numThreads; i++) {
-
-            // Initialize the current elements in the arrays - these values will be updated in the threads upon success
-            statuses[i] = -1;
-            pings[i] = -1;
-
-            // Start the threads
-            statusThreads[i] = thread(&Terminal::statusThread, ref(*monitor), i, ref(statuses[i]), ref(pings[i]));
+            statusThreads.emplace_back(&Terminal::statusThread, ref(*monitor), i, ref(statuses.at(i)), ref(pings.at(i)));
         }
-
-        for (size_t i = 0; i < numThreads; i++) {
-            statusThreads[i].join();
-        }
+        std::for_each_n(statusThreads.begin(), numThreads, [&](thread& t){t.join();});
+        statusThreads.clear();
 
         update_terminal(statuses, pings);
 
@@ -99,7 +95,7 @@ void Terminal::run() {
  * @param statuses An array containing the HTTP statuses of each address
  * @param times An array containing the time-to-last-byte for each address
  */
-void Terminal::update_terminal(const long* statuses, const long* times) const {
+void Terminal::update_terminal(vector<long>& statuses, vector<long>& times) const {
     for (size_t i = 0; i < data_write_positions.size(); i++) {
         auto position_pair = data_write_positions.at(i);
 
