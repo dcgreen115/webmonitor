@@ -107,7 +107,13 @@ void Terminal::update_terminal(const long* statuses, const long* times) const {
         cout << Term::cursor_move(position_pair.first, position_pair.second);
         cout << string(DATA_MAX_LENGTH, ' ');
         cout << Term::cursor_move(position_pair.first, position_pair.second);
-        cout << "HTTP " << statuses[i] << " | " << times[i] << "ms";
+
+        if (statuses[i] != -1) {
+            cout << "HTTP " << statuses[i] << " | " << times[i] << "ms";
+        } else {
+            cout << "      ERROR";
+        }
+
     }
 
     cout << Term::cursor_move(5, 1) << flush;
