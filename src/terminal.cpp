@@ -4,15 +4,18 @@
 #include <unistd.h>
 #endif
 
-#include <iostream>
-#include <thread>
-#include "terminal.hpp"
-#include "monitor.hpp"
-#include <cpp-terminal/base.hpp>
 #include <utility>
 #include <csignal>
+#include <iostream>
+#include <thread>
+#include <cpp-terminal/base.hpp>
+#include "terminal.hpp"
 
-using namespace std;
+using std::string;
+using std::size_t;
+using std::pair;
+using std::vector;
+using std::cout;
 
 extern sig_atomic_t running;
 
@@ -31,9 +34,8 @@ Terminal::Terminal(Monitor* new_monitor) {
  * positions such that text is centered within their boxes.
  */
 void Terminal::init() {
-
     // Form the line that shows each of the addresses entered
-    const string address_line = form_address_line();
+    const auto address_line = form_address_line();
 
     // Calculate the positions within the terminal that data should be written at for each address
     data_write_positions = calculate_data_positions(address_line);
@@ -44,18 +46,15 @@ void Terminal::init() {
     cout << address_line << '\n';
 
     cout << '#';
-    for (string_view address : *monitor->getAddresses()) {
+    for (std::string_view address : *monitor->getAddresses()) {
         if (address.length() < DATA_MAX_LENGTH) {
             cout << std::string(25, ' ') << '#';
         } else {
             cout << std::string(address.length() + 8, ' ') << '#';
         }
-
     }
     cout << '\n';
-
-    //cout << '#' << string(address_line.length() - 2, ' ') << "#\n";
-    cout << string(address_line.length(), '#') << endl;
+    cout << string(address_line.length(), '#') << std::endl;
 }
 
 /**
@@ -63,11 +62,10 @@ void Terminal::init() {
  * held by the monitor and prints new data to the terminal.
  */
 void Terminal::run() {
-
     const size_t numThreads = monitor->getAddresses()->size();
-    vector<thread> statusThreads;
-    vector<long> statuses(numThreads);
-    vector<long> pings(numThreads);
+    vector<std::thread> statusThreads;
+    vector<int64_t> statuses(numThreads);
+    vector<int64_t> pings(numThreads);
 
     while (running) {
         // Fill the status and TTLB vectors with default values
@@ -77,9 +75,9 @@ void Terminal::run() {
 
         // Spawn an HTTP status thread for each address, then join them all
         for (size_t i = 0; i < numThreads; i++) {
-            statusThreads.emplace_back(&Terminal::statusThread, ref(*monitor), i, ref(statuses.at(i)), ref(pings.at(i)));
+            statusThreads.emplace_back(&Terminal::statusThread, monitor, i, &statuses.at(i), &pings.at(i));
         }
-        std::for_each_n(statusThreads.begin(), numThreads, [&](thread& t){t.join();});
+        std::for_each_n(statusThreads.begin(), numThreads, [&](std::thread& t){t.join();});
         statusThreads.clear();
 
         update_terminal(statuses, pings);
@@ -95,7 +93,7 @@ void Terminal::run() {
  * @param statuses An array containing the HTTP statuses of each address
  * @param times An array containing the time-to-last-byte for each address
  */
-void Terminal::update_terminal(vector<long>& statuses, vector<long>& times) const {
+void Terminal::update_terminal(const vector<int64_t>& statuses, const vector<int64_t>& times) const {
     for (size_t i = 0; i < data_write_positions.size(); i++) {
         auto position_pair = data_write_positions.at(i);
 
@@ -109,10 +107,9 @@ void Terminal::update_terminal(vector<long>& statuses, vector<long>& times) cons
         } else {
             cout << "      ERROR";
         }
-
     }
 
-    cout << Term::cursor_move(5, 1) << flush;
+    cout << Term::cursor_move(5, 1) << std::flush;
 }
 
 /**
@@ -123,10 +120,9 @@ void Terminal::update_terminal(vector<long>& statuses, vector<long>& times) cons
  */
 string Terminal::form_address_line() {
     string address_line;
-    address_line.append("#"); // The left edge of the view-box
+    address_line.append("#");  // The left edge of the view-box
 
-    for (const string_view address : *monitor->getAddresses()) {
-
+    for (std::string_view address : *monitor->getAddresses()) {
         // All addresses will have at least 4 leading spaces
         address_line.append("    ");
 
@@ -155,7 +151,7 @@ string Terminal::form_address_line() {
             // Finally, add the newly padded address to the address line
             address_line.append(padded_address);
 
-        } else { // Otherwise, we can add the address as is
+        } else {  // Otherwise, we can add the address as is
             address_line.append(address);
         }
 
@@ -175,7 +171,7 @@ string Terminal::form_address_line() {
  * pair holds <row, column> indices where the data for its corresponding
  * address should be printed at
  */
-vector<pair<size_t, size_t>> Terminal::calculate_data_positions(const string_view address_line) {
+vector<pair<size_t, size_t>> Terminal::calculate_data_positions(const std::string_view address_line) const {
     vector<pair<size_t, size_t>> returnVector;
 
     // The list of addresses being used by the monitor and its size
@@ -194,16 +190,15 @@ vector<pair<size_t, size_t>> Terminal::calculate_data_positions(const string_vie
         size_t address_start_index = address_line.find(address, last_address_index + 1);
         last_address_index = address_start_index + address.length();
 
-        // If the address is shorter than its data, then the data will be shifted to the left relative
-        // to its address using the formula: offset = (DATA_MAX_LENGTH - address length) / 2 - 1
+        /* If the address is shorter than its data, then the data will be shifted to the left relative
+         to its address using the formula: offset = (DATA_MAX_LENGTH - address length) / 2 - 1
+         Otherwise, the data will be shifted right relative to its address using the
+         formula: offset = (address length - DATA_MAX_LENGTH) / 2 + 2 */
         if (address.size() < DATA_MAX_LENGTH) {
             size_t offset = (DATA_MAX_LENGTH - address.size()) / 2 - 1;
             size_t columnIndex = address_start_index - offset;
             returnVector.emplace_back(DATA_ROW_INDEX, columnIndex);
-        }
-        // Otherwise, the data will be shifted right relative to its address using the
-        // formula: offset = (address length - DATA_MAX_LENGTH) / 2 + 2
-        else {
+        } else {
             size_t offset = (address.size() - DATA_MAX_LENGTH) / 2 + 2;
             size_t columnIndex = address_start_index + offset;
             returnVector.emplace_back(DATA_ROW_INDEX, columnIndex);

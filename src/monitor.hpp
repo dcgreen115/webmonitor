@@ -1,13 +1,13 @@
-#ifndef PINGMONITOR_MONITOR_HPP
-#define PINGMONITOR_MONITOR_HPP
+#ifndef SRC_MONITOR_HPP_
+#define SRC_MONITOR_HPP_
 
+#include <curl/curl.h>
 #include <vector>
 #include <cstdint>
-#include <curl/curl.h>
 #include <string>
 
 class Monitor {
-public:
+ public:
     Monitor() = default;
     ~Monitor();
 
@@ -19,7 +19,7 @@ public:
     [[nodiscard]] std::vector<CURL*>* getHandles();
     [[nodiscard]] uint32_t getInterval() const;
     void setInterval(uint32_t newInterval);
-private:
+ private:
     // A list of website addresses used for printing on the terminal
     std::vector<std::string> addresses;
 
@@ -30,4 +30,4 @@ private:
     uint32_t interval = 5;
 };
 
-#endif //PINGMONITOR_MONITOR_HPP
+#endif  // SRC_MONITOR_HPP_

@@ -1,7 +1,7 @@
-#include <iostream>
 #include <curl/curl.h>
-#include <cstring>
 #include <getopt.h>
+#include <iostream>
+#include <cstring>
 #include <sstream>
 #include <csignal>
 #include "monitor.hpp"
@@ -27,7 +27,7 @@ std::size_t write_data([[maybe_unused]] void* buffer, std::size_t size,
  * @param argc The argc passed in to the main function
  * @param argv The argv passed in to the main function
  */
-void parse_args(Monitor& monitor, const int argc, char* const argv[]) {
+void parse_args(Monitor* monitor, const int argc, char* const argv[]) {
     struct option long_options[] = {
             {"help", no_argument, nullptr, 'h'},
             {"address", required_argument, nullptr, 'a'},
@@ -35,34 +35,40 @@ void parse_args(Monitor& monitor, const int argc, char* const argv[]) {
             {nullptr, 0, nullptr, 0}
             };
 
-    while(true) {
+    while (true) {
         int short_option = getopt_long(argc, argv, "ha:i:", long_options, nullptr);
 
-        if (short_option == -1) return; // Reached end of arguments
+        if (short_option == -1) return;  // Reached end of arguments
 
-        switch(short_option) {
-            case 'h': // Help
-                std::cout << "Help text" << std::endl; //TODO: Add help text
+        switch (short_option) {
+            case 'h':  // Help
+                std::cout << "Usage: webmonitor [options]\n"
+                             "Options:\n"
+                             "  -h, --help            Display the help text.\n"
+                             "  -a, --address <URL>   Set a URL to monitor.\n"
+                             "  -i, --interval <time> Set the refresh interval in seconds."
+                << std::endl;
+                exit(0);
                 break;
-            case 'a': // Address
+            case 'a':  // Address
             {
-                monitor.getAddresses()->push_back(optarg);
+                monitor->getAddresses()->push_back(optarg);
                 CURL* handle = curl_easy_init();
-                curl_easy_setopt(handle, CURLOPT_URL, optarg); // Set the URL to the current address argument
-                curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data); // Custom callback function prevents CURL output from being written to the console
-                curl_easy_setopt(handle, CURLOPT_TIMEOUT, 10); // Times out at 10 seconds
-                monitor.getHandles()->push_back(handle);
+                curl_easy_setopt(handle, CURLOPT_URL, optarg);  // Set the URL to the current address argument
+                curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);  // Prevents CURL from writing to stdout
+                curl_easy_setopt(handle, CURLOPT_TIMEOUT, 10);  // Times out at 10 seconds
+                monitor->getHandles()->push_back(handle);
             }
                 break;
-            case 'i': // Interval
+            case 'i':  // Interval
             {
-                std::stringstream ss(optarg); // Create a stringstream to extract the number passed in
+                std::stringstream ss(optarg);  // Create a stringstream to extract the number passed in
                 int i;
                 ss >> i;
-                monitor.setInterval(i);
+                monitor->setInterval(i);
                 break;
             }
-            case '?': // Something other than the specified options
+            case '?':  // Something other than the specified options
                 throw std::invalid_argument("");
             default:
                 break;
@@ -71,7 +77,6 @@ void parse_args(Monitor& monitor, const int argc, char* const argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-
     // If no arguments were entered, show how to use the "help" option
     if (argc == 1) {
         std::cout << "Use 'pingmonitor --help' for more information" << std::endl;
@@ -81,7 +86,7 @@ int main(int argc, char* argv[]) {
     // Set up the monitor using the arguments provided
     Monitor monitor;
     try {
-        parse_args(monitor, argc, argv);
+        parse_args(&monitor, argc, argv);
     } catch (std::invalid_argument&) {
         // getopt will automatically generate an error message, so just return
         return 1;
