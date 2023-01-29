@@ -9,10 +9,6 @@
 
 sig_atomic_t volatile running = true;
 
-void sig_handler([[maybe_unused]] int signum) {
-    running = false;
-}
-
 // This function is used as a callback for libcurl so that it doesn't print
 // HTTP responses to stdout
 std::size_t write_data([[maybe_unused]] void* buffer, std::size_t size,
@@ -65,7 +61,13 @@ void parse_args(Monitor* monitor, const int argc, char* const argv[]) {
                 std::stringstream ss(optarg);  // Create a stringstream to extract the number passed in
                 int i;
                 ss >> i;
-                monitor->setInterval(i);
+
+                if (ss.fail()) {
+                    throw std::invalid_argument("The entered interval is not a number");
+                } else {
+                    monitor->setInterval(i);
+                }
+
                 break;
             }
             case '?':  // Something other than the specified options
@@ -74,6 +76,17 @@ void parse_args(Monitor* monitor, const int argc, char* const argv[]) {
                 break;
         }
     }
+}
+
+// Signals the main Terminal loop to stop running so that the program exits cleanly
+void sig_handler([[maybe_unused]] int signum) {
+    running = false;
+}
+
+// Set sig_handler to run when the user enters Ctrl+C or the kill command
+void register_signal_handlers() {
+    signal(SIGINT, &sig_handler);
+    signal(SIGTERM, &sig_handler);
 }
 
 int main(int argc, char* argv[]) {
@@ -87,14 +100,18 @@ int main(int argc, char* argv[]) {
     Monitor monitor;
     try {
         parse_args(&monitor, argc, argv);
-    } catch (std::invalid_argument&) {
-        // getopt will automatically generate an error message, so just return
+    } catch (std::invalid_argument& e) {
+        std::cout << e.what() << std::endl;
+        return 1;
+    }
+
+    if (monitor.getAddresses()->empty()) {
+        std::cout << "Program requires one or more addresses to monitor." << std::endl;
         return 1;
     }
 
     // Register signal handlers so that the program exits cleanly
-    signal(SIGINT, &sig_handler);
-    signal(SIGTERM, &sig_handler);
+    register_signal_handlers();
 
     // Take control of the terminal this program is run in and start displaying data from the monitor
     Terminal terminal(&monitor);
