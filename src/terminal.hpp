@@ -25,6 +25,13 @@ class Terminal {
     // The maximum length that data can have - "HTTP 200 | 1000ms"
     static constexpr std::size_t DATA_MAX_LENGTH = 17;
 
+    // Colors for text within the terminal
+    const std::string TERMINAL_GRAY = Term::color_fg(Term::Color4::GRAY);
+    const std::string TERMINAL_GREEN = Term::color_fg(Term::Color4::GREEN);
+    const std::string TERMINAL_YELLOW = Term::color_fg(Term::Color4::YELLOW);
+    const std::string TERMINAL_RED = Term::color_fg(Term::Color4::RED);
+    const std::string TERMINAL_WHITE = Term::color_fg(Term::Color4::WHITE);
+
     // The monitor from which HTTP status and time-to-last-byte data is
     // obtained from
     Monitor* monitor;
@@ -45,6 +52,8 @@ class Terminal {
     // Finds the positions in the terminal that data should be written at
     [[nodiscard]] std::vector<std::pair<std::size_t, std::size_t>>
         calculate_data_positions(std::string_view address_line) const;
+
+    [[nodiscard]] static std::string cursor_move_relative(int64_t rows, int64_t columns) ;
 
     // A thread that will get the current HTTP status and time-to-last-byte of
     // a website contained in the monitor

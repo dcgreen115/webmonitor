@@ -48,19 +48,26 @@ void Terminal::init() {
 
     // Write the empty view-box to the terminal
     cout << Term::clear_screen() << Term::cursor_move(1, 1);
-    cout << string(address_line.length(), '#') << '\n';
+    cout << TERMINAL_GRAY << string(address_line.length(), '#') << TERMINAL_WHITE << '\n';
     cout << address_line << '\n';
 
-    cout << '#';
+    // Separating '#'s for the address and data rows
+    cout << TERMINAL_GRAY << '#';
+    cout << cursor_move_relative(-1, -1) << '#' << Term::cursor_down(1);
+    //std::string a;
+    //a.append(Term::cursor_left(1)).append(Term::cursor_up(1));
+    //cout << a << '#' << Term::cursor_down(1);
     for (std::string_view address : *monitor->getAddresses()) {
         if (address.length() < DATA_MAX_LENGTH) {
             cout << std::string(25, ' ') << '#';
+            cout << cursor_move_relative(-1, -1) << '#' << Term::cursor_down(1);
         } else {
             cout << std::string(address.length() + 8, ' ') << '#';
+            cout << cursor_move_relative(-1, -1) << '#' << Term::cursor_down(1);
         }
     }
     cout << '\n';
-    cout << string(address_line.length(), '#') << std::endl;
+    cout << string(address_line.length(), '#') << TERMINAL_WHITE << std::endl;
 }
 
 /**
@@ -126,7 +133,7 @@ void Terminal::update_terminal(const vector<int64_t>& statuses, const vector<int
  */
 string Terminal::form_address_line() {
     string address_line;
-    address_line.append("#");  // The left edge of the view-box
+    address_line.append(" ");  // The left edge of the view-box will be handled in init(), so just print a space here
 
     for (std::string_view address : *monitor->getAddresses()) {
         // All addresses will have at least 4 leading spaces
@@ -162,7 +169,8 @@ string Terminal::form_address_line() {
         }
 
         // Addresses will have at least 4 trailing spaces and a '#' separator
-        address_line.append("    #");
+        // The '#' separator is printed in init(), so we will append 5 spaces here
+        address_line.append("     ");
     }
 
     return address_line;
@@ -212,4 +220,21 @@ vector<pair<size_t, size_t>> Terminal::calculate_data_positions(const std::strin
     }
 
     return returnVector;
+}
+
+std::string Terminal::cursor_move_relative(int64_t rows, int64_t columns) {
+    std::string return_string;
+    if (rows < 0) {
+        return_string.append(Term::cursor_up(rows * -1));
+    } else if (rows > 0) {
+        return_string.append(Term::cursor_down(rows));
+    }
+
+    if (columns < 0) {
+        return_string.append(Term::cursor_left(columns * -1));
+    } else if (columns > 0) {
+        return_string.append(Term::cursor_right(columns));
+    }
+
+    return return_string;
 }
