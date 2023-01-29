@@ -17,6 +17,7 @@ using std::pair;
 using std::vector;
 using std::cout;
 
+// If set to true, the terminal refresh loop will continue running
 extern sig_atomic_t running;
 
 /**
@@ -27,6 +28,11 @@ extern sig_atomic_t running;
 Terminal::Terminal(Monitor* new_monitor) {
     monitor = new_monitor;
     init();
+}
+
+// Resets the terminal the program runs in
+Terminal::~Terminal() {
+    std::cout << Term::clear_screen() << Term::cursor_move(1, 1);
 }
 
 /**

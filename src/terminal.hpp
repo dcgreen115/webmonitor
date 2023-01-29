@@ -13,6 +13,8 @@ class Terminal {
     // A constructor that uses a monitor to take data from
     explicit Terminal(Monitor* monitor);
 
+    ~Terminal();
+
     // Continuously gets new data from the monitor and updates data
     // in the terminal window
     void run();
