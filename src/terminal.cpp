@@ -54,9 +54,6 @@ void Terminal::init() {
     // Separating '#'s for the address and data rows
     cout << TERMINAL_GRAY << '#';
     cout << cursor_move_relative(-1, -1) << '#' << Term::cursor_down(1);
-    //std::string a;
-    //a.append(Term::cursor_left(1)).append(Term::cursor_up(1));
-    //cout << a << '#' << Term::cursor_down(1);
     for (std::string_view address : *monitor->getAddresses()) {
         if (address.length() < DATA_MAX_LENGTH) {
             cout << std::string(25, ' ') << '#';
@@ -116,9 +113,11 @@ void Terminal::update_terminal(const vector<int64_t>& statuses, const vector<int
         cout << Term::cursor_move(position_pair.first, position_pair.second);
 
         if (statuses[i] != -1) {
-            cout << "HTTP " << statuses[i] << " | " << times[i] << "ms";
+            cout << get_status_color(statuses[i]) << "HTTP " << statuses[i]
+            << TERMINAL_WHITE << " | "
+            << get_time_color(times[i]) << times[i] << "ms";
         } else {
-            cout << "      ERROR";
+            cout << TERMINAL_RED << "      ERROR" << TERMINAL_WHITE;
         }
     }
 
@@ -222,6 +221,12 @@ vector<pair<size_t, size_t>> Terminal::calculate_data_positions(const std::strin
     return returnVector;
 }
 
+/**
+ * Moves the terminal cursor relative to its current location
+ * @param rows How many rows to move. Negative values move up, positive values move down.
+ * @param columns How many columns to move. Negative values move left, positive values move right.
+ * @return A TTY code that specifies where the cursor should move, as an std::string
+ */
 std::string Terminal::cursor_move_relative(int64_t rows, int64_t columns) {
     std::string return_string;
     if (rows < 0) {
@@ -237,4 +242,35 @@ std::string Terminal::cursor_move_relative(int64_t rows, int64_t columns) {
     }
 
     return return_string;
+}
+
+/**
+ * Returns a TTY color code based on the HTTP status passed in the parameter.
+ * 4XX and 5XX codes will be shown in red, while all other codes will be shown in green.
+ * @param status An HTTP status code
+ * @return The TTY color code corresponding to the HTTP status as an std::string
+ */
+string Terminal::get_status_color(int64_t status) const {
+    if (status >= 400) {
+        return TERMINAL_RED;
+    } else {
+        return TERMINAL_GREEN;
+    }
+}
+
+/**
+ * Returns a TTY color code based on the time-to-last-byte passed in the parameter.
+ * Times 200ms and below will be shown in green, between 201ms and 1000ms inclusive in yellow,
+ * and 1001 or above in red.
+ * @param time A time in milliseconds
+ * @return The TTY color code corresponding to the time parameter as an std::string
+ */
+string Terminal::get_time_color(int64_t time) const {
+    if (time <= 200) {
+        return TERMINAL_GREEN;
+    } else if (time <= 1000) {
+        return TERMINAL_YELLOW;
+    } else {
+        return TERMINAL_RED;
+    }
 }

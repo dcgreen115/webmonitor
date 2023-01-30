@@ -53,7 +53,14 @@ class Terminal {
     [[nodiscard]] std::vector<std::pair<std::size_t, std::size_t>>
         calculate_data_positions(std::string_view address_line) const;
 
+    // Moves the cursor relative to its current position
     [[nodiscard]] static std::string cursor_move_relative(int64_t rows, int64_t columns) ;
+
+    // Gets the TTY color corresponding to the HTTP status passed in as the parameter
+    [[nodiscard]] std::string get_status_color(int64_t status) const;
+
+    // Gets the TTY color corresponding to the TTLB time passed in as the parameter
+    [[nodiscard]] std::string get_time_color(int64_t time) const;
 
     // A thread that will get the current HTTP status and time-to-last-byte of
     // a website contained in the monitor
