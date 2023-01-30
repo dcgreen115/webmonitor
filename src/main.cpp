@@ -52,7 +52,7 @@ void parse_args(Monitor* monitor, const int argc, char* const argv[]) {
                 CURL* handle = curl_easy_init();
                 curl_easy_setopt(handle, CURLOPT_URL, optarg);  // Set the URL to the current address argument
                 curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);  // Prevents CURL from writing to stdout
-                curl_easy_setopt(handle, CURLOPT_TIMEOUT, 10);  // Times out at 10 seconds
+                curl_easy_setopt(handle, CURLOPT_TIMEOUT, 5);  // Times out at 5 seconds
                 monitor->getHandles()->push_back(handle);
             }
                 break;
@@ -64,6 +64,8 @@ void parse_args(Monitor* monitor, const int argc, char* const argv[]) {
 
                 if (ss.fail()) {
                     throw std::invalid_argument("The entered interval is not a number");
+                } else if (i < 1) {
+                    throw std::invalid_argument("Interval must be at least 1 second");
                 } else {
                     monitor->setInterval(i);
                 }
