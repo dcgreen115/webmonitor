@@ -5,6 +5,11 @@ website being monitored, and supports an unlimited number of URLs as input. Webm
 is currently confirmed working on Linux operating systems and is expected to be fully
 working on Windows and MacOS.
 
+## Library Requirements
+`Webmonitor` requires the libcurl and cpp-terminal libraries to build. They can be found here:\
+[libcurl](https://curl.se/libcurl/)\
+[cpp-terminal](https://github.com/jupyter-xeus/cpp-terminal)
+
 ## Program Arguments
 `Webmonitor` expects the following command line arguments:\
 `-h, --help` Displays this help text.\
