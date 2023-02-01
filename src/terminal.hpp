@@ -36,8 +36,8 @@ class Terminal {
     // obtained from
     Monitor* monitor;
 
-    // A list holding the indices that data will be written to on the terminal
-    std::vector<std::pair<std::size_t, std::size_t>> data_write_positions;
+    // A list holding the column indices that data will be written to on the terminal
+    std::vector<std::size_t> data_write_positions;
 
     // Sets up the terminal view-box
     void init();
@@ -50,8 +50,7 @@ class Terminal {
     std::string form_address_line();
 
     // Finds the positions in the terminal that data should be written at
-    [[nodiscard]] std::vector<std::pair<std::size_t, std::size_t>>
-        calculate_data_positions(std::string_view address_line) const;
+    [[nodiscard]] std::vector<std::size_t> calculate_data_positions(std::string_view address_line) const;
 
     // Moves the cursor relative to its current position
     [[nodiscard]] static std::string cursor_move_relative(int64_t rows, int64_t columns) ;

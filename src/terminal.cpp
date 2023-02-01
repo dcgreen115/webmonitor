@@ -105,12 +105,12 @@ void Terminal::run() {
  */
 void Terminal::update_terminal(const vector<int64_t>& statuses, const vector<int64_t>& times) const {
     for (size_t i = 0; i < data_write_positions.size(); i++) {
-        auto position_pair = data_write_positions.at(i);
+        auto column = data_write_positions.at(i);
 
         // Clear the old data and write the new data to the terminal
-        cout << Term::cursor_move(position_pair.first, position_pair.second);
+        cout << Term::cursor_move(DATA_ROW_INDEX, column);
         cout << string(DATA_MAX_LENGTH, ' ');
-        cout << Term::cursor_move(position_pair.first, position_pair.second);
+        cout << Term::cursor_move(DATA_ROW_INDEX, column);
 
         if (statuses[i] != -1) {
             cout << get_status_color(statuses[i]) << "HTTP " << statuses[i]
@@ -184,8 +184,8 @@ string Terminal::form_address_line() {
  * pair holds <row, column> indices where the data for its corresponding
  * address should be printed at
  */
-vector<pair<size_t, size_t>> Terminal::calculate_data_positions(const std::string_view address_line) const {
-    vector<pair<size_t, size_t>> returnVector;
+vector<size_t> Terminal::calculate_data_positions(const std::string_view address_line) const {
+    vector<size_t> returnVector;
 
     // The list of addresses being used by the monitor and its size
     auto addresses = monitor->getAddresses();
@@ -210,11 +210,11 @@ vector<pair<size_t, size_t>> Terminal::calculate_data_positions(const std::strin
         if (address.size() < DATA_MAX_LENGTH) {
             size_t offset = (DATA_MAX_LENGTH - address.size()) / 2 - 1;
             size_t columnIndex = address_start_index - offset;
-            returnVector.emplace_back(DATA_ROW_INDEX, columnIndex);
+            returnVector.push_back(columnIndex);
         } else {
             size_t offset = (address.size() - DATA_MAX_LENGTH) / 2 + 2;
             size_t columnIndex = address_start_index + offset;
-            returnVector.emplace_back(DATA_ROW_INDEX, columnIndex);
+            returnVector.push_back(columnIndex);
         }
     }
 
